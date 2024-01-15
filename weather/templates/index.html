@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang=“en”>
+<head>
+    <meta charset="UTF-8">
+    <title>WeatherApp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load static %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/weather-icons/css/weather-icons.min.css">
+    <link rel="stylesheet" href="{% static 'weather/styles.css' %}?v=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+</head>
+<body>
+<video autoplay loop muted plays-inline class="video-background">
+    <source src="{% static 'weather/videoEarth.mp4' %}" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
+
+<div class="centered-content">
+    <h1>Weather in your city</h1>
+    {% if error_message %}
+        <div class="alert alert-danger" role="alert">
+            {{ error_message }}
+        </div>
+    {% endif %}
+    <form action="/" method="get">
+        <input type="text" id="city" name="city" placeholder="Enter city">
+        <input type="submit" name="send" value="Search">
+    </form>
+
+
+    <div class="container">
+        <div class="card mb-4">
+            <h3 class="card-title">The weather in {{ city_name }} is:</h3>
+            <p class="card-text"><i class="wi {{ weather_icon }}"></i> {{ weather_description }}</p>
+            <p class="card-text">Temperature: {{ temp }} <sup>o</sup>C</p>
+            <p class="card-text">Wind speed: {{ wind_speed }} m/s</p>
+            <p class="card-text">Humidity: {{ humidity }} %</p>
+            <p class="card-text">Pressure: {{ pressure }} hPa</p>
+            <p class="card-text">Visibility: {{ visibility }} meters</p>
+        </div>
+
+        <h4 class="card-title">Weather forecast for 5 days in {{ city_name }}:</h4>
+        {% if forecast %}
+            <div class="table-wrapper">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th>Time</th>
+                            <th>Weather conditions</th>
+                            <th>Temperature</th>
+                            <th>Wind speed</th>
+                            <th>Humidity</th>
+                            <th>Pressure</th>
+                            <th>Visibility</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for item in forecast.list %}
+                            <tr>
+                                <td>{{ item.dt_txt }}</td>
+                                <td><i class="wi {{ item.weather.0.icon }}"></i> {{ item.weather.0.description }}
+                                </td>
+                                <td>{{ item.main.temp }} °C</td>
+                                <td>{{ item.wind.speed }} m/s</td>
+                                <td>{{ item.main.humidity }} %</td>
+                                <td>{{ item.main.pressure }} hPa</td>
+                                <td>{{ item.visibility }} meters</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div id="map-container">
+                    <div id="mapid" style="height: 400px;"></div>
+                </div>
+            </div>
+        {% else %}
+            <p class="card-text">No forecast data available.</p>
+        {% endif %}
+
+    </div>
+</div>
+<script>
+    // Verificam daca avem coordonatele setate pentru a inițializa harta
+    {% if latitude and longitude %}
+        var map = L.map('mapid').setView([{{ latitude }}, {{ longitude }}], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.marker([{{ latitude }}, {{ longitude }}]).addTo(map)
+            .bindPopup('Aici este {{ city_name }}.');
+    {% endif %}
+</script>
+</body>
+</html>
